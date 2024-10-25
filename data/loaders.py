@@ -40,7 +40,8 @@ def load_data(config):
     hr = hr_data.sel(latitude=slice(latitude_range[0],latitude_range[1]),
                     longitude=slice(longitude_range[0],longitude_range[1]))
     hr = hr.sel(time=config["dataset"]["time_range"])
-    lr = lr.load()
-    hr = hr.load()
 
-    return lr, hr
+    if config["training"]["streaming"]:
+        return lr, hr
+    else:
+        return lr.load(), hr.load()

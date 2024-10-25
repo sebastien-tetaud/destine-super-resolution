@@ -12,7 +12,7 @@ from utils.general import (get_bbox_from_config,
                            save_best_model_as_pt,
                            save_config_to_log_dir)
 from data.loaders import load_data
-from data.datasets import CreateDataset
+from data.datasets import CreateDataset, StreamCreateDataset
 import models.models as models
 from trainer import TrainerSr
 # Ignore warnings and set precision
@@ -41,6 +41,8 @@ def main():
     config["dataset"]["hr_std"] = hr_std
     config["dataset"]["lr_mean"] = lr_mean
     config["dataset"]["lr_std"] = lr_std
+    # Create DataLoader for train, validation, and test sets
+    batch_size = config['training']['batch_size']
 
     # Split data into train, validation, and test indices
     time_indices = np.arange(len(hr.time.values))
@@ -63,25 +65,45 @@ def main():
     print(f"Validation samples: {len(val_hr.time.values)}")
     print(f"Test samples: {len(test_hr.time.values)}")
 
-    # Create datasets for train, validation, and test
-    train_dataset = CreateDataset(
-        hr_data=train_hr, lr_data=train_lr, hr_mean=hr_mean, hr_std=hr_std,
-        lr_mean=lr_mean, lr_std=lr_std
-    )
-    val_dataset = CreateDataset(
-        hr_data=val_hr, lr_data=val_lr, hr_mean=hr_mean, hr_std=hr_std,
-        lr_mean=lr_mean, lr_std=lr_std
-    )
-    test_dataset = CreateDataset(
-        hr_data=test_hr, lr_data=test_lr, hr_mean=hr_mean, hr_std=hr_std,
-        lr_mean=lr_mean, lr_std=lr_std
-    )
+    if config["training"]["streaming"]:
 
-    # Create DataLoader for train, validation, and test sets
-    batch_size = config['training']['batch_size']
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=14)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
+        train_loader = StreamCreateDataset(hr_data=train_hr, lr_data=train_lr,
+                              hr_mean=hr_mean, hr_std=hr_std,
+                              lr_mean=lr_mean, lr_std=lr_std,
+                              batch_size=batch_size)
+
+
+        val_loader = StreamCreateDataset(hr_data=val_hr, lr_data=val_lr,
+                                    hr_mean=hr_mean, hr_std=hr_std,
+                                    lr_mean=lr_mean, lr_std=lr_std,
+                                    batch_size=batch_size)
+
+        # Create test dataset
+        test_loader = StreamCreateDataset(hr_data=test_hr, lr_data=test_lr,
+                                    hr_mean=hr_mean, hr_std=hr_std,
+                                    lr_mean=lr_mean, lr_std=lr_std,
+                                    batch_size=batch_size)
+
+    else:
+
+        # Create datasets for train, validation, and test
+        train_dataset = CreateDataset(
+            hr_data=train_hr, lr_data=train_lr, hr_mean=hr_mean, hr_std=hr_std,
+            lr_mean=lr_mean, lr_std=lr_std
+        )
+        val_dataset = CreateDataset(
+            hr_data=val_hr, lr_data=val_lr, hr_mean=hr_mean, hr_std=hr_std,
+            lr_mean=lr_mean, lr_std=lr_std
+        )
+        test_dataset = CreateDataset(
+            hr_data=test_hr, lr_data=test_lr, hr_mean=hr_mean, hr_std=hr_std,
+            lr_mean=lr_mean, lr_std=lr_std
+        )
+
+
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
 
     # Load SRResNet model configuration
     large_kernel_size = config["model"]["large_kernel_size"]
