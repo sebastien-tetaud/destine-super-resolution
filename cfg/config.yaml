@@ -7,10 +7,10 @@ model:
   scaling_factor: 8
 
 training:
-  streaming: True
+  streaming: False
   learning_rate: 0.001
   batch_size: 32
-  epochs: 100
+  epochs: 10
   optimizer: Adam
   loss_function: mse_loss # Pytorch Loss function e.g
   devices: [0]
