@@ -48,6 +48,11 @@ $\textcolor{orange}{\textsf{Web Application}}$: To visualize inference results a
     pip install -r requirements.txt
     ```
 
+
+Install COG file generation dependencies
+
+- gdal_translate -> [Installation on Linux](https://gdal.org/en/latest/download.html)
+
 ## Prject Structure
 
 ```bash
@@ -56,6 +61,8 @@ $\textcolor{orange}{\textsf{Web Application}}$: To visualize inference results a
     ├── app.py
     ├── assets
     │   └── banner.svg
+    ├── auth
+    │   └── cacheb-authentication.py
     ├── cfg
     │   └── config.yaml
     ├── data
@@ -64,15 +71,34 @@ $\textcolor{orange}{\textsf{Web Application}}$: To visualize inference results a
     ├── inference.py
     ├── models
     │   └── models.py
+    ├── notebook.ipynb
     ├── train.py
     ├── trainer.py
     └── utils
         └── general.py
 ```
 
+## Destine Service Access Login
+
+Before to train your model, please got on the main Jupyter Notebook and the following cells to setup your destine Credentials:
+
+```Bash
+%%capture cap
+%run auth/cacheb-authentication.py
+```
+
+```Bash
+output_1 = cap.stdout.split('}\n')
+token = output_1[-1][0:-1]
+
+from pathlib import Path
+with open(Path.home() / ".netrc", "a") as fp:
+    fp.write(token)
+```
+
 ## Train model
 
-It is possible to train the model either on the following notebook: **notebook**
+It is possible to train the model either on the following notebook: **notebook.ipynb**
 
 The training script takes a configuration file as input, which parses the training parameters(TODO).
 You can also run the script directly using the following command:

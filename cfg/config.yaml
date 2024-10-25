@@ -10,7 +10,7 @@ training:
   streaming: False
   learning_rate: 0.001
   batch_size: 32
-  epochs: 10
+  epochs: 100
   optimizer: Adam
   loss_function: mse_loss # Pytorch Loss function e.g
   devices: [0]
@@ -26,6 +26,7 @@ dataset:
   longitude_range: [5, 16.25]
   data_variable: "t2m"
   data_target: "t2m"
+  unit: "Temperature (C)"
 
 validation:
   val_split_ratio: 0.30
