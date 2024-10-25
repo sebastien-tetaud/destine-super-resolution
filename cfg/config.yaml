@@ -10,7 +10,7 @@ training:
   streaming: False
   learning_rate: 0.001
   batch_size: 32
-  epochs: 10
+  epochs: 100
   optimizer: Adam
   loss_function: mse_loss # Pytorch Loss function e.g
   devices: [0]
