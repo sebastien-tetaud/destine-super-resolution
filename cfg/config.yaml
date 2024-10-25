@@ -1,0 +1,39 @@
+model:
+  architecture: SRResNet
+  large_kernel_size: 9
+  small_kernel_size: 3
+  n_channels: 64
+  n_blocks: 16
+  scaling_factor: 8
+
+training:
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 100
+  optimizer: Adam
+  loss_function: mse_loss # Pytorch Loss function e.g
+  devices: [0]
+  accelerator: "gpu"
+  deterministic: true
+  seed: 42
+
+dataset:
+  hr_zarr_url: "https://cacheb.dcms.destine.eu/d1-climate-dt/ScenarioMIP-SSP3-7.0-IFS-NEMO-0001-high-sfc-v0.zarr"
+  lr_zarr_url: "https://cacheb.dcms.destine.eu/d1-climate-dt/ScenarioMIP-SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr"
+  time_range: "2024-10"
+  latitude_range: [47, 58.22]
+  longitude_range: [5, 16.25]
+  data_variable: "t2m"
+  data_target: "t2m"
+
+validation:
+  val_split_ratio: 0.30
+
+checkpoint:
+  monitor: "val_ssim"
+  mode: "max"
+  filename: "best-val-ssim-{epoch:02d}-{val_ssim:.2f}"
+  save_top_k: 1
+
+visualization:
+  color_map: "YlOrRd"
