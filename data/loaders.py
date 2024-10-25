@@ -41,6 +41,8 @@ def load_data(config):
                     longitude=slice(longitude_range[0],longitude_range[1]))
     hr = hr.sel(time=config["dataset"]["time_range"])
 
+    hr.attrs["units"] = config["dataset"]["unit"]
+    lr.attrs["units"] = config["dataset"]["unit"]
     if config["training"]["streaming"]:
         return lr, hr
     else:
