@@ -62,6 +62,7 @@ def compute_mean_std(data):
     """
     mean = data.mean().values
     std = data.std().values
+
     return np.float64(mean), np.float64(std)
 
 
