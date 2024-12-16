@@ -1,22 +1,28 @@
 import argparse
 import datetime
 import gradio as gr
-from gradio_calendar import Calendar
 import xarray as xr
 import numpy as np
 import subprocess
 import models.models as models
-import rioxarray  # Ensure rioxarray is imported for spatial data handling
+# import rioxarray  # Ensure rioxarray is imported for spatial data handling
 from inference import SuperResolutionInference
 import os
 import base64
 from utils.general import (load_json_config, ColorMappingGenerator)
 
 # CLI Argument Parsing
-parser = argparse.ArgumentParser(description="Gradio interface for super-resolution inference")
-parser.add_argument("--config_path", type=str, required=True, help="Path to the JSON configuration file")
-parser.add_argument("--model_path", type=str, required=True, help="Path to the pre-trained model file")
+parser = argparse.ArgumentParser(
+    description="Gradio interface for super-resolution inference")
+parser.add_argument(
+    "--config_path",
+    type=str,
+    required=True,
+    help="Path to the JSON configuration file")
+parser.add_argument("--model_path", type=str, required=True,
+                    help="Path to the pre-trained model file")
 args = parser.parse_args()
+
 
 def svg_to_base64(file_path):
     """
@@ -38,6 +44,7 @@ class GradioInference:
     Class to handle the inference process for super-resolution and COG file generation
     for both low-resolution and super-resolved temperature data.
     """
+
     def __init__(self, config_path, model_path):
         """
         Initialize the GradioInference class by loading configuration and setting up
@@ -53,17 +60,22 @@ class GradioInference:
         print(self.model_path)
         self.scale_factor_latitude = self.config["model"]["scaling_factor"]
         lr_data = xr.open_dataset(
-        self.config["dataset"]["lr_zarr_url"],
+            self.config["dataset"]["lr_zarr_url"],
             engine="zarr",
-        storage_options={"client_kwargs": {"trust_env": "true"}},
+            storage_options={"client_kwargs": {"trust_env": "true"}},
             chunks={},
         )
         lr_data = lr_data[self.config["dataset"]["data_variable"]]
         lr_data = lr_data.astype("float32") - 273.15
         latitude_range = tuple(self.config["dataset"]["latitude_range"])
         longitude_range = tuple(self.config["dataset"]["longitude_range"])
-        self.lr = lr_data.sel(latitude=slice(latitude_range[0],latitude_range[1]),
-                        longitude=slice(longitude_range[0],longitude_range[1]))
+        self.lr = lr_data.sel(
+            latitude=slice(
+                latitude_range[0],
+                latitude_range[1]),
+            longitude=slice(
+                longitude_range[0],
+                longitude_range[1]))
         self.lr.attrs["units"] = "C"
         self.sr_result = None
         self.lr_image = None
@@ -90,25 +102,32 @@ class GradioInference:
         n_blocks = self.config["model"]["n_blocks"]
         scaling_factor = self.config["model"]["scaling_factor"]
 
-        sr_model = getattr(models,  self.config["model"]["architecture"])
+        sr_model = getattr(models, self.config["model"]["architecture"])
         sr_model = sr_model(
-            large_kernel_size=large_kernel_size, small_kernel_size=small_kernel_size,
-            n_channels=n_channels, n_blocks=n_blocks, scaling_factor=scaling_factor
-        )
-        sr = SuperResolutionInference(model_path=self.model_path, model_class=sr_model)
+            large_kernel_size=large_kernel_size,
+            small_kernel_size=small_kernel_size,
+            n_channels=n_channels,
+            n_blocks=n_blocks,
+            scaling_factor=scaling_factor)
+        sr = SuperResolutionInference(
+            model_path=self.model_path,
+            model_class=sr_model)
         # Convert the selected date to the appropriate format
-        formatted_str = datetime.datetime.fromtimestamp(selected_date).strftime('%Y-%m-%dT%H:%M')
+        formatted_str = datetime.datetime.fromtimestamp(
+            selected_date).strftime('%Y-%m-%dT%H:%M')
         # Currently hardcoded for demonstration
         self.lr_image = self.lr.sel(time=formatted_str, method='nearest')
         # Preprocess and perform inference
-        preprocessed_image = sr.preprocess(self.lr_image, lr_mean=self.lr_mean, lr_std=self.lr_std)
+        preprocessed_image = sr.preprocess(
+            self.lr_image, lr_mean=self.lr_mean, lr_std=self.lr_std)
         sr_result = sr.inference(preprocessed_image)
 
         # Postprocess the result and visualize
-        self.sr_result = sr.postprocessing(sr_result, self.hr_mean, self.hr_std)
+        self.sr_result = sr.postprocessing(
+            sr_result, self.hr_mean, self.hr_std)
         fig = sr.visualize(lr_image=self.lr_image, sr_image=self.sr_result,
                            lr_time=self.lr_image.time.values
-        )
+                           )
 
         return fig
 
@@ -120,14 +139,16 @@ class GradioInference:
             str: Filepath of the generated COG file or an error message if it fails.
         """
         color_mapping_gen = ColorMappingGenerator(
-            lr_image=self.lr_image.values, sr_result=self.sr_result, num_colors=20
-        )
+            lr_image=self.lr_image.values,
+            sr_result=self.sr_result,
+            num_colors=20)
         # Write the RGB mapping to a text file
         color_mapping_gen.write_rgb_mapping_to_file("color_mapping.txt")
 
         try:
             if self.lr_image is None or self.sr_result is None:
-                raise ValueError("Run inference before generating the COG file.")
+                raise ValueError(
+                    "Run inference before generating the COG file.")
 
             # Generate latitude and longitude
             latitudes = np.linspace(
@@ -156,12 +177,24 @@ class GradioInference:
             # Convert to VRT and apply color relief
             vrt_filename = 'vrt_filename.vrt'
             output_vrt_filename = 'output_vrt_filename.vrt'
-            subprocess.run(f"gdal_translate -of VRT {tif_filename} {vrt_filename}", shell=True, check=True)
-            subprocess.run(f"gdaldem color-relief {vrt_filename} color_mapping.txt {output_vrt_filename}", shell=True, check=True)
+            subprocess.run(
+                f"gdal_translate -of VRT {tif_filename} {vrt_filename}",
+                shell=True,
+                check=True)
+            subprocess.run(
+                f"gdaldem color-relief {vrt_filename} color_mapping.txt {output_vrt_filename}",
+                shell=True,
+                check=True)
             # Convert VRT to COG
             output_cog_filename = f"{self.current_time}_hr_cog_file.tif"
-            subprocess.run(f"gdal_translate -of COG {output_vrt_filename} {output_cog_filename}", shell=True, check=True)
-            subprocess.run(f"rm -fr {tif_filename} {vrt_filename} {output_vrt_filename}", shell=True, check=True)
+            subprocess.run(
+                f"gdal_translate -of COG {output_vrt_filename} {output_cog_filename}",
+                shell=True,
+                check=True)
+            subprocess.run(
+                f"rm -fr {tif_filename} {vrt_filename} {output_vrt_filename}",
+                shell=True,
+                check=True)
 
             return output_cog_filename  # Return the COG file path to be downloadable
 
@@ -179,13 +212,22 @@ class GradioInference:
         """
         try:
             if self.lr_image is None:
-                raise ValueError("Run inference before generating the COG file.")
+                raise ValueError(
+                    "Run inference before generating the COG file.")
             # Create xarray Dataset for the low-resolution image
             ds_lr = xr.Dataset(
-                data_vars={"t2m": (["latitude", "longitude"], self.lr_image.values)},
-                coords={"latitude": self.lr_image.latitude, "longitude": self.lr_image.longitude, "time": self.lr_image.time},
-                attrs={"description": "Low-resolution 2-meter temperature"}
-            )
+                data_vars={
+                    "t2m": (
+                        [
+                            "latitude",
+                            "longitude"],
+                        self.lr_image.values)},
+                coords={
+                    "latitude": self.lr_image.latitude,
+                    "longitude": self.lr_image.longitude,
+                    "time": self.lr_image.time},
+                attrs={
+                    "description": "Low-resolution 2-meter temperature"})
             var_lr = ds_lr['t2m']
             # Convert to proper CRS and handle NaN values
             var_lr = var_lr.rename({'latitude': 'y', 'longitude': 'x'})
@@ -194,28 +236,46 @@ class GradioInference:
             # Save the low-resolution data as a TIF file
             tif_lr_filename = 'lr_tif_filename.tif'
             var_lr_filled.rio.to_raster(tif_lr_filename)
-            # Convert to VRT and apply color relief (Optional, depends on your needs)
+            # Convert to VRT and apply color relief (Optional, depends on your
+            # needs)
             vrt_lr_filename = 'lr_vrt_filename.vrt'
             output_vrt_lr_filename = 'lr_output_vrt_filename.vrt'
-            subprocess.run(f"gdal_translate -of VRT {tif_lr_filename} {vrt_lr_filename}", shell=True, check=True)
-            subprocess.run(f"gdaldem color-relief {vrt_lr_filename} color_mapping.txt {output_vrt_lr_filename}", shell=True, check=True)
+            subprocess.run(
+                f"gdal_translate -of VRT {tif_lr_filename} {vrt_lr_filename}",
+                shell=True,
+                check=True)
+            subprocess.run(
+                f"gdaldem color-relief {vrt_lr_filename} color_mapping.txt {output_vrt_lr_filename}",
+                shell=True,
+                check=True)
             # Convert VRT to COG
             output_cog_lr_filename = f"{self.current_time}_lr_cog_file.tif"
-            subprocess.run(f"gdal_translate -of COG {output_vrt_lr_filename} {output_cog_lr_filename}", shell=True, check=True)
-            subprocess.run(f"rm -fr {vrt_lr_filename} {output_vrt_lr_filename} {tif_lr_filename}", shell=True, check=True)
+            subprocess.run(
+                f"gdal_translate -of COG {output_vrt_lr_filename} {output_cog_lr_filename}",
+                shell=True,
+                check=True)
+            subprocess.run(
+                f"rm -fr {vrt_lr_filename} {output_vrt_lr_filename} {tif_lr_filename}",
+                shell=True,
+                check=True)
             return output_cog_lr_filename  # Return the COG file path to be downloadable
 
         except subprocess.CalledProcessError as e:
-            return f"Error occurred while generating COG for low-resolution image: {str(e)}"
+            return f"Error occurred while generating COG for low-resolution image: {
+                str(e)}"
         except Exception as e:
             return f"Unexpected error: {str(e)}"
 
 
 # Initialize Gradio Inference object
-inference = GradioInference(config_path=args.config_path, model_path=args.model_path)
+inference = GradioInference(
+    config_path=args.config_path,
+    model_path=args.model_path)
 
-# Path to the local SVG file (modify this path if it's located in another folder)
-local_svg_path = "assets/banner.svg"  # Update this with the actual path to your SVG file
+# Path to the local SVG file (modify this path if it's located in another
+# folder)
+# Update this with the actual path to your SVG file
+local_svg_path = "assets/banner.svg"
 # Function to convert the SVG file to Base64
 
 
@@ -242,8 +302,8 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="orange", secondary_hue="gray
             # date_picker = Calendar(type="date", label="Select Date", info="Pick a date from the calendar.")
             date_picker = gr.DateTime(label="Select Date and Time")
 
-
-            # Run Inference button will automatically take the "primary_hue" color from the theme
+            # Run Inference button will automatically take the "primary_hue"
+            # color from the theme
             run_inference = gr.Button("Run Inference", variant="primary")
             cog_button = gr.Button("Generate Super-Resolution COG file")
             lr_cog_button = gr.Button("Generate Low-Resolution COG file")

@@ -56,7 +56,9 @@ def main():
     )
 
     # Split datasets into train, validation, and test sets
-    train_lr, train_hr = lr.isel(time=train_indices), hr.isel(time=train_indices)
+    train_lr, train_hr = lr.isel(
+        time=train_indices), hr.isel(
+        time=train_indices)
     val_lr, val_hr = lr.isel(time=val_indices), hr.isel(time=val_indices)
     test_lr, test_hr = lr.isel(time=test_indices), hr.isel(time=test_indices)
 
@@ -68,21 +70,20 @@ def main():
     if config["training"]["streaming"]:
 
         train_loader = StreamCreateDataset(hr_data=train_hr, lr_data=train_lr,
-                              hr_mean=hr_mean, hr_std=hr_std,
-                              lr_mean=lr_mean, lr_std=lr_std,
-                              batch_size=batch_size)
-
+                                           hr_mean=hr_mean, hr_std=hr_std,
+                                           lr_mean=lr_mean, lr_std=lr_std,
+                                           batch_size=batch_size)
 
         val_loader = StreamCreateDataset(hr_data=val_hr, lr_data=val_lr,
-                                    hr_mean=hr_mean, hr_std=hr_std,
-                                    lr_mean=lr_mean, lr_std=lr_std,
-                                    batch_size=batch_size)
+                                         hr_mean=hr_mean, hr_std=hr_std,
+                                         lr_mean=lr_mean, lr_std=lr_std,
+                                         batch_size=batch_size)
 
         # Create test dataset
         test_loader = StreamCreateDataset(hr_data=test_hr, lr_data=test_lr,
-                                    hr_mean=hr_mean, hr_std=hr_std,
-                                    lr_mean=lr_mean, lr_std=lr_std,
-                                    batch_size=batch_size)
+                                          hr_mean=hr_mean, hr_std=hr_std,
+                                          lr_mean=lr_mean, lr_std=lr_std,
+                                          batch_size=batch_size)
 
     else:
 
@@ -100,10 +101,21 @@ def main():
             lr_mean=lr_mean, lr_std=lr_std
         )
 
-
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=14)
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=14)
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=14)
+        test_loader = DataLoader(
+            test_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=14)
 
     # Load SRResNet model configuration
     large_kernel_size = config["model"]["large_kernel_size"]
@@ -112,20 +124,22 @@ def main():
     n_blocks = config["model"]["n_blocks"]
     scaling_factor = config["model"]["scaling_factor"]
 
-
-    sr_model = getattr(models,  config["model"]["architecture"])
+    sr_model = getattr(models, config["model"]["architecture"])
     sr_model = sr_model(
-        large_kernel_size=large_kernel_size, small_kernel_size=small_kernel_size,
-        n_channels=n_channels, n_blocks=n_blocks, scaling_factor=scaling_factor
-    )
+        large_kernel_size=large_kernel_size,
+        small_kernel_size=small_kernel_size,
+        n_channels=n_channels,
+        n_blocks=n_blocks,
+        scaling_factor=scaling_factor)
     # Initialize the training model with trainer-specific parameters
     model = TrainerSr(config=config, model=sr_model)
 
     # Define model checkpoint callback
     checkpoint_val_ssim = ModelCheckpoint(
-        monitor=config['checkpoint']['monitor'], filename="best-val-ssim-{epoch:02d}-{val_ssim:.2f}",
-        save_top_k=1, mode=config['checkpoint']['mode']
-    )
+        monitor=config['checkpoint']['monitor'],
+        filename="best-val-ssim-{epoch:02d}-{val_ssim:.2f}",
+        save_top_k=1,
+        mode=config['checkpoint']['mode'])
 
     # Set up the PyTorch Lightning Trainer
     trainer = L.Trainer(

@@ -6,13 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.cm as cm
 
-import numpy as np
 import torch
-import os
 import yaml
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cf
 import json
 
 
@@ -21,16 +16,17 @@ def load_config(config_path="cfg/config.yaml"):
         config = yaml.safe_load(file)
     return config
 
+
 def load_json_config(config_path="lightning_logs/version_0/config.json"):
     with open(config_path, 'r') as file:
         config = json.load(file)
     return config
 
 
-
 def save_config_to_log_dir(log_dir_path, config):
     """
-    Save configuration dictionary as a YAML file in the specified log directory.
+    Save configuration dictionary as a YAML file
+    in the specified log directory.
 
     Parameters:
     - log_dir_path (str): Path to the trainer's log directory where config will be saved.
@@ -41,7 +37,8 @@ def save_config_to_log_dir(log_dir_path, config):
     """
     # Ensure the log directory exists
     if not os.path.exists(log_dir_path):
-        raise FileNotFoundError(f"Log directory '{log_dir_path}' does not exist.")
+        raise FileNotFoundError(
+            f"Log directory '{log_dir_path}' does not exist.")
 
     # Define the path to the config file within the log directory
     config_path = os.path.join(log_dir_path, "config.json")
@@ -102,13 +99,17 @@ def save_best_model_as_pt(checkpoint_callback, model_instance):
     print(f"Best checkpoint path: {best_checkpoint_path}")
 
     # Load the checkpoint file (using PyTorch directly)
-    checkpoint = torch.load(best_checkpoint_path, map_location=torch.device('cpu'))  # Adjust map_location for GPU if necessary
+    # Adjust map_location for GPU if necessary
+    checkpoint = torch.load(
+        best_checkpoint_path,
+        map_location=torch.device('cpu'))
 
     # Extract the model's state_dict from the checkpoint
     model_state_dict = checkpoint['state_dict']
 
     # You might need to adjust key names if they contain "module." or "model."
-    model_instance.load_state_dict({k.replace("model.", ""): v for k, v in model_state_dict.items()})
+    model_instance.load_state_dict(
+        {k.replace("model.", ""): v for k, v in model_state_dict.items()})
 
     # Save the PyTorch model's state_dict as .pth
     pth_file_path = best_checkpoint_path.replace("ckpt", "pt")
@@ -117,7 +118,10 @@ def save_best_model_as_pt(checkpoint_callback, model_instance):
     return pth_file_path
 
 
-def create_gif_from_images(trainer, output_name="training_progress.gif", duration=10):
+def create_gif_from_images(
+        trainer,
+        output_name="training_progress.gif",
+        duration=10):
     """
     Creates a GIF from PNG images saved in the current trainer log directory.
 
@@ -134,7 +138,6 @@ def create_gif_from_images(trainer, output_name="training_progress.gif", duratio
 
     # Sort images by name (to ensure they are in correct order)
     images = natsorted(images)
-
 
     # Create full paths to images
     image_paths = [os.path.join(log_dir, img) for img in images]
@@ -160,12 +163,19 @@ class ColorMappingGenerator:
         - colormap: The colormap to use (default: 'YlOrRd')
         """
         self.num_colors = num_colors
-        self.v_min = min(lr_image.min(), sr_result.min())  # Minimum value from both images
-        self.v_max = max(lr_image.max(), sr_result.max())  # Maximum value from both images
-        self.color_values = np.linspace(self.v_min, self.v_max, self.num_colors)  # Generate evenly spaced values
+        # Minimum value from both images
+        self.v_min = min(lr_image.min(), sr_result.min())
+        # Maximum value from both images
+        self.v_max = max(lr_image.max(), sr_result.max())
+        self.color_values = np.linspace(
+            self.v_min,
+            self.v_max,
+            self.num_colors)  # Generate evenly spaced values
         self.cmap = plt.get_cmap(colormap)  # Get colormap
-        self.norm = mpl.colors.Normalize(vmin=self.v_min, vmax=self.v_max)  # Normalize values
-        self.scalarMap = cm.ScalarMappable(norm=self.norm, cmap=self.cmap)  # Colormap scalar
+        self.norm = mpl.colors.Normalize(
+            vmin=self.v_min, vmax=self.v_max)  # Normalize values
+        self.scalarMap = cm.ScalarMappable(
+            norm=self.norm, cmap=self.cmap)  # Colormap scalar
 
     def write_rgb_mapping_to_file(self, filename="color_mapping.txt"):
         """
@@ -180,7 +190,8 @@ class ColorMappingGenerator:
             # Write RGB mappings for each value
             for value in self.color_values:
                 rgba = self.scalarMap.to_rgba(value)  # Get RGBA color
-                rgb = tuple(int(x * 255) for x in rgba[:3])  # Convert to 0-255 range (ignore alpha)
+                # Convert to 0-255 range (ignore alpha)
+                rgb = tuple(int(x * 255) for x in rgba[:3])
                 file.write(f"{value:.2f} {rgb[0]}, {rgb[1]}, {rgb[2]}\n")
         print(f"Color mapping saved to {filename}.")
 
@@ -191,6 +202,7 @@ class ColorMappingGenerator:
         fig, ax = plt.subplots(figsize=(6, 1))
         fig.subplots_adjust(bottom=0.5)
         # Create and display the colorbar
-        colorbar = mpl.colorbar.ColorbarBase(ax, cmap=self.cmap, norm=self.norm, orientation='horizontal')
+        colorbar = mpl.colorbar.ColorbarBase(
+            ax, cmap=self.cmap, norm=self.norm, orientation='horizontal')
         colorbar.set_label('Value')
         plt.show()

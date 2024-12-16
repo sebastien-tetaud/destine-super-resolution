@@ -13,14 +13,13 @@ class TrainerSr(L.LightningModule):
     def __init__(self, config, model):
         super().__init__()
 
-
         self.bbox = get_bbox_from_config(config=config)
         self.lr = config['training']['learning_rate']
         self.model = model
         self.psnr = PeakSignalNoiseRatio()
         self.ssim = StructuralSimilarityIndexMeasure()
         self.lr_mean = config["dataset"]["lr_mean"]
-        self.lr_std =  config["dataset"]["hr_std"]
+        self.lr_std = config["dataset"]["hr_std"]
         self.hr_mean = config["dataset"]["hr_mean"]
         self.hr_std = config["dataset"]["lr_std"]
         self.cmap = config['visualization']['color_map']
@@ -57,8 +56,16 @@ class TrainerSr(L.LightningModule):
         self.log('val_ssim', ssim_value, prog_bar=True)
         # Log images to TensorBoard every 1 steps
         if batch_idx == 1:
-            self.log_images(lr_img, hr_img, sr_img, self.current_epoch, batch_idx)
-        return {'val_loss': loss, 'val_psnr': psnr_value, 'val_ssim': ssim_value}
+            self.log_images(
+                lr_img,
+                hr_img,
+                sr_img,
+                self.current_epoch,
+                batch_idx)
+        return {
+            'val_loss': loss,
+            'val_psnr': psnr_value,
+            'val_ssim': ssim_value}
 
     def test_step(self, batch):
         lr_img, hr_img = batch
@@ -72,7 +79,10 @@ class TrainerSr(L.LightningModule):
         self.log('test_psnr', psnr_value, prog_bar=True)
         self.log('test_ssim', ssim_value, prog_bar=True)
 
-        return {'test_loss': loss, 'test_psnr': psnr_value, 'test_ssim': ssim_value}
+        return {
+            'test_loss': loss,
+            'test_psnr': psnr_value,
+            'test_ssim': ssim_value}
 
     def configure_optimizers(self):
 
@@ -101,27 +111,48 @@ class TrainerSr(L.LightningModule):
         v_min = min(lr_img_np.min(), hr_img_np.min(), sr_img_np.min())
         v_max = max(lr_img_np.max(), hr_img_np.max(), sr_img_np.max())
         # Create a figure with three subplots for LR, HR, and SR images
-        fig, ax = plt.subplots(1, 3, figsize=(18, 6), subplot_kw={'projection': ccrs.Mercator()})
+        fig, ax = plt.subplots(
+            1, 3, figsize=(
+                18, 6), subplot_kw={
+                'projection': ccrs.Mercator()})
         # Plot low-resolution data
         ax[0].coastlines()
         ax[0].add_feature(cf.BORDERS)
         ax[0].set_extent(self.bbox, crs=ccrs.PlateCarree())
-        lr_plot = ax[0].imshow(lr_img_np, origin='upper', extent=self.bbox,
-                            transform=ccrs.PlateCarree(), cmap=self.cmap, vmin=v_min, vmax=v_max)
+        lr_plot = ax[0].imshow(
+            lr_img_np,
+            origin='upper',
+            extent=self.bbox,
+            transform=ccrs.PlateCarree(),
+            cmap=self.cmap,
+            vmin=v_min,
+            vmax=v_max)
         ax[0].set_title("Low-Resolution")
         # Plot high-resolution data
         ax[1].coastlines()
         ax[1].add_feature(cf.BORDERS)
         ax[1].set_extent(self.bbox, crs=ccrs.PlateCarree())
-        hr_plot = ax[1].imshow(hr_img_np, origin='upper', extent=self.bbox,
-                            transform=ccrs.PlateCarree(), cmap=self.cmap, vmin=v_min, vmax=v_max)
+        hr_plot = ax[1].imshow(
+            hr_img_np,
+            origin='upper',
+            extent=self.bbox,
+            transform=ccrs.PlateCarree(),
+            cmap=self.cmap,
+            vmin=v_min,
+            vmax=v_max)
         ax[1].set_title("High-Resolution")
         # Plot super-resolved data
         ax[2].coastlines()
         ax[2].add_feature(cf.BORDERS)
         ax[2].set_extent(self.bbox, crs=ccrs.PlateCarree())
-        sr_plot = ax[2].imshow(sr_img_np, origin='upper', extent=self.bbox,
-                            transform=ccrs.PlateCarree(), cmap=self.cmap, vmin=v_min, vmax=v_max)
+        sr_plot = ax[2].imshow(
+            sr_img_np,
+            origin='upper',
+            extent=self.bbox,
+            transform=ccrs.PlateCarree(),
+            cmap=self.cmap,
+            vmin=v_min,
+            vmax=v_max)
         ax[2].set_title("Super-Resolution Prediction")
         # Add a colorbar outside the last plot (super-resolution)
         cbar = fig.colorbar(sr_plot, ax=ax, location='right')
@@ -129,7 +160,13 @@ class TrainerSr(L.LightningModule):
         # Get the current logging directory (e.g., lightning_logs/version_0)
         log_dir = self.logger.log_dir
         save_dir = os.path.join(log_dir, 'val_prediction')
-        os.makedirs(save_dir, exist_ok=True)  # Create the directory if it doesn't exist
+        # Create the directory if it doesn't exist
+        os.makedirs(save_dir, exist_ok=True)
         # Save the figure to a PNG file
-        plt.savefig(f"{save_dir}/batch_{str(batch_idx)}_epoch_{str(epoch)}.png", format='png', bbox_inches='tight')
+        plt.savefig(
+            f"{save_dir}/batch_{
+                str(batch_idx)}_epoch_{
+                str(epoch)}.png",
+            format='png',
+            bbox_inches='tight')
         plt.close(fig)
