@@ -106,6 +106,11 @@ You can also run the script directly using the following command:
 python train.py
 ```
 
+You can access to the Tensboard via the following typing the cli in the root directory:
+```Bash
+tensorboard --logdir .
+```
+
 $\textcolor{orange}{\textsf{config file}}$: The training use a yaml configuration file. Feel free to change parameters.
 
 
