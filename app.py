@@ -12,15 +12,9 @@ import base64
 from utils.general import (load_json_config, ColorMappingGenerator)
 
 # CLI Argument Parsing
-parser = argparse.ArgumentParser(
-    description="Gradio interface for super-resolution inference")
-parser.add_argument(
-    "--config_path",
-    type=str,
-    required=True,
-    help="Path to the JSON configuration file")
-parser.add_argument("--model_path", type=str, required=True,
-                    help="Path to the pre-trained model file")
+parser = argparse.ArgumentParser(description="Gradio interface for super-resolution inference")
+parser.add_argument("--config_path", type=str, required=True, help="Path to the JSON configuration file")
+parser.add_argument("--model_path", type=str, required=True, help="Path to the pre-trained model file")
 args = parser.parse_args()
 
 
