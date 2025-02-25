@@ -4,10 +4,6 @@ from torchvision import transforms
 import torch
 
 
-import torch
-from torch.utils.data import Dataset
-
-
 def z_score_normalization(tensor: torch.Tensor) -> torch.Tensor:
     """
     Perform Z-score normalization for each channel of the input tensor.
