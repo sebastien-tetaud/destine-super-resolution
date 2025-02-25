@@ -4,55 +4,78 @@ from torchvision import transforms
 import torch
 
 
-def z_score_normalization(tensor):
+import torch
+from torch.utils.data import Dataset
+
+
+def z_score_normalization(tensor: torch.Tensor) -> torch.Tensor:
     """
     Perform Z-score normalization for each channel of the input tensor.
 
     Args:
-        tensor (torch.Tensor): Input tensor of shape [C, H, W]
+        tensor (torch.Tensor): Input tensor of shape [C, H, W].
 
     Returns:
-        torch.Tensor: Normalized tensor
+        torch.Tensor: Normalized tensor.
     """
     mean = tensor.mean(dim=[1, 2], keepdim=True)  # Mean along H and W for each channel
     std = tensor.std(dim=[1, 2], keepdim=True)    # Standard deviation along H and W for each channel
+
     # Prevent division by zero
-    std = std + 1e-6  # Adding a small constant to avoid NaNs
-    normalized_tensor = (tensor - mean) / std
-    return normalized_tensor  # FIX: Return the normalized tensor
+    std = std + 1e-6
+
+    return (tensor - mean) / std
 
 
 class CreateDataset(Dataset):
+    """
+    PyTorch Dataset for handling low-resolution (LR) and high-resolution (HR)
+    climate data for super-resolution tasks.
+
+    Attributes:
+        hr_data (xarray.Dataset): High-resolution dataset.
+        lr_data (xarray.Dataset): Low-resolution dataset.
+        hr_variables (list): List of HR variable names.
+        lr_variables (list): List of LR variable names.
+    """
+
     def __init__(self, lr_data, hr_data):
         """
+        Initialize the dataset with low-resolution and high-resolution climate data.
+
         Args:
-            hr_data (xarray.Dataset): High-resolution data
-            lr_data (xarray.Dataset): Low-resolution data
+            lr_data (xarray.Dataset): Low-resolution dataset.
+            hr_data (xarray.Dataset): High-resolution dataset.
         """
         self.hr_data = hr_data
         self.lr_data = lr_data
         self.lr_variables = list(self.lr_data.data_vars)
         self.hr_variables = list(self.hr_data.data_vars)
 
-    def __len__(self):
-        # Dataset length is the number of time steps
+    def __len__(self) -> int:
+        """
+        Get the total number of time steps in the dataset.
+
+        Returns:
+            int: The number of time steps.
+        """
         return self.hr_data.dims["time"]
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple:
         """
+        Retrieve a single sample of low-resolution and high-resolution data.
+
         Args:
-            idx (int): Index of the sample to return
+            idx (int): Index of the sample to return.
+
         Returns:
-            tuple: (low-resolution, high-resolution) data as tensors
+            tuple: A tuple containing:
+                - lr_norm (torch.Tensor): Normalized low-resolution tensor (C, H, W).
+                - hr_norm (torch.Tensor): Normalized high-resolution tensor (C, H, W).
         """
-
-        # Select the time slice at the given index
-        hr_sample = self.hr_data.isel(time=idx)  # Extract HR data at idx
-        lr_sample = self.lr_data.isel(time=idx)  # Extract LR data at idx
-
-        # Convert to NumPy arrays (C, H, W)
-        hr_sample = hr_sample.to_array().values
-        lr_sample = lr_sample.to_array().values
+        # Extract HR and LR data at the given time index
+        hr_sample = self.hr_data.isel(time=idx).to_array().values  # (C, H, W)
+        lr_sample = self.lr_data.isel(time=idx).to_array().values  # (C, H, W)
 
         # Convert to torch tensors
         hr_sample = torch.tensor(hr_sample, dtype=torch.float32)
@@ -63,6 +86,7 @@ class CreateDataset(Dataset):
         lr_norm = z_score_normalization(lr_sample)
 
         return lr_norm, hr_norm
+
 
 
 # class StreamCreateDataset(Dataset):
