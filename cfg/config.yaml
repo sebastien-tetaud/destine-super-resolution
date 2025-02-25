@@ -24,7 +24,7 @@ dataset:
   time_range: "2024-10"
   latitude_range: [47, 58.22]
   longitude_range: [5, 16.25]
-  data_variable:  "t2m" #['sp', 't2m', 'tcc', 'tciw', 'tclw', 'tcwv', 'tprate', 'u10', 'v10'] #
+  data_variable:  ['sp', 't2m', 'tcc', 'tciw', 'tclw', 'tcwv', 'tprate', 'u10', 'v10']
   data_target: "t2m"
   unit: "Temperature (C)"
 
