@@ -21,7 +21,7 @@ def load_data(config):
     )
 
     lr_data = lr_data[config["dataset"]["data_variable"]]
-    lr_data = lr_data.astype("float32") - 273.15
+    lr_data = lr_data.astype("float32")
     latitude_range = tuple(config["dataset"]["latitude_range"])
     longitude_range = tuple(config["dataset"]["longitude_range"])
 
@@ -36,7 +36,7 @@ def load_data(config):
         chunks={},
     )
     hr_data = hr_data[config["dataset"]["data_target"]]
-    hr_data = hr_data.astype("float32") - 273.15
+    hr_data = hr_data.astype("float32")
     hr = hr_data.sel(latitude=slice(latitude_range[0],latitude_range[1]),
                     longitude=slice(longitude_range[0],longitude_range[1]))
     hr = hr.sel(time=config["dataset"]["time_range"])
