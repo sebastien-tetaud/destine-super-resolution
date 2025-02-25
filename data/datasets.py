@@ -51,19 +51,18 @@ class CreateDataset(Dataset):
         lr_sample = self.lr_data.isel(time=idx)  # Extract LR data at idx
 
         # Convert to NumPy arrays (C, H, W)
-        hr_sample = hr_sample.to_array().values  # Convert xarray dataset to numpy array
+        hr_sample = hr_sample.to_array().values
         lr_sample = lr_sample.to_array().values
-
 
         # Convert to torch tensors
         hr_sample = torch.tensor(hr_sample, dtype=torch.float32)
         lr_sample = torch.tensor(lr_sample, dtype=torch.float32)
 
         # Apply Z-score normalization
-        hr_sample = z_score_normalization(hr_sample)
-        lr_sample = z_score_normalization(lr_sample)
+        hr_norm = z_score_normalization(hr_sample)
+        lr_norm = z_score_normalization(lr_sample)
 
-        return lr_sample, hr_sample
+        return lr_norm, hr_norm
 
 
 # class StreamCreateDataset(Dataset):
