@@ -139,7 +139,7 @@ class SRResNet(nn.Module):
     The SRResNet, as defined in the paper.
     """
 
-    def __init__(self, large_kernel_size=9, small_kernel_size=3, n_channels=64, n_blocks=16, scaling_factor=4):
+    def __init__(self,in_channels, large_kernel_size=9, small_kernel_size=3, n_channels=64, n_blocks=16, scaling_factor=4):
         """
         :param large_kernel_size: kernel size of the first and last convolutions which transform the inputs and outputs
         :param small_kernel_size: kernel size of all convolutions in-between, i.e. those in the residual and subpixel convolutional blocks
@@ -154,7 +154,7 @@ class SRResNet(nn.Module):
         assert scaling_factor in {2, 4, 8}, "The scaling factor must be 2, 4, or 8!"
 
         # The first convolutional block
-        self.conv_block1 = ConvolutionalBlock(in_channels=1, out_channels=n_channels, kernel_size=large_kernel_size,
+        self.conv_block1 = ConvolutionalBlock(in_channels=in_channels, out_channels=n_channels, kernel_size=large_kernel_size,
                                               batch_norm=False, activation='PReLu')
 
         # self.conv_block1 = ConvolutionalBlock(in_channels=1, out_channels=n_channels, kernel_size=large_kernel_size,
@@ -200,3 +200,13 @@ class SRResNet(nn.Module):
         sr_imgs = self.conv_block3(output)  # (N, 3, w * scaling factor, h * scaling factor)
 
         return sr_imgs
+
+# import torch
+
+# random_tensor = torch.randn(32, 9, 32, 32)
+
+# sr_model = SRResNet(in_channels=9,large_kernel_size=9,small_kernel_size=3,
+#                     n_channels=64, n_blocks=16, scaling_factor=8)
+
+# out = sr_model(random_tensor)
+# print(out.shape)

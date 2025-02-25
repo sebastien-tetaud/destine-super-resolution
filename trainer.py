@@ -18,10 +18,10 @@ class TrainerSr(L.LightningModule):
         self.model = model
         self.psnr = PeakSignalNoiseRatio()
         self.ssim = StructuralSimilarityIndexMeasure()
-        self.lr_mean = config["dataset"]["lr_mean"]
-        self.lr_std = config["dataset"]["hr_std"]
-        self.hr_mean = config["dataset"]["hr_mean"]
-        self.hr_std = config["dataset"]["lr_std"]
+        # self.lr_mean = config["dataset"]["lr_mean"]
+        # self.lr_std = config["dataset"]["hr_std"]
+        # self.hr_mean = config["dataset"]["hr_mean"]
+        # self.hr_std = config["dataset"]["lr_std"]
         self.cmap = config['visualization']['color_map']
         self.loss_function = config['training']['loss_function']
         self.opt = config['training']['optimizer']
