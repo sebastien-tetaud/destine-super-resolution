@@ -16,6 +16,8 @@ def z_score_normalization(tensor):
     """
     mean = tensor.mean(dim=[1, 2], keepdim=True)  # Mean along H and W for each channel
     std = tensor.std(dim=[1, 2], keepdim=True)    # Standard deviation along H and W for each channel
+    # Prevent division by zero
+    std = std + 1e-6  # Adding a small constant to avoid NaNs
     normalized_tensor = (tensor - mean) / std
     return normalized_tensor  # FIX: Return the normalized tensor
 
