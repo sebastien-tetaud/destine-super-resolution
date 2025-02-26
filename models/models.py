@@ -139,7 +139,7 @@ class SRResNet(nn.Module):
     The SRResNet, as defined in the paper.
     """
 
-    def __init__(self,in_channels, large_kernel_size=9, small_kernel_size=3, n_channels=64, n_blocks=16, scaling_factor=4):
+    def __init__(self, in_channels, large_kernel_size=9, small_kernel_size=3, n_channels=64, n_blocks=16, scaling_factor=4):
         """
         :param large_kernel_size: kernel size of the first and last convolutions which transform the inputs and outputs
         :param small_kernel_size: kernel size of all convolutions in-between, i.e. those in the residual and subpixel convolutional blocks
@@ -200,6 +200,10 @@ class SRResNet(nn.Module):
         sr_imgs = self.conv_block3(output)  # (N, 3, w * scaling factor, h * scaling factor)
 
         return sr_imgs
+
+
+
+
 
 # import torch
 

@@ -22,9 +22,15 @@ dataset:
   hr_zarr_url: "https://cacheb.dcms.destine.eu/d1-climate-dt/ScenarioMIP-SSP3-7.0-IFS-NEMO-0001-high-sfc-v0.zarr"
   lr_zarr_url: "https://cacheb.dcms.destine.eu/d1-climate-dt/ScenarioMIP-SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr"
   time_range: "2024-10"
+  start_date: "2020-01-01"
+  end_date: "2021-01-01"
   latitude_range: [47, 58.22]
   longitude_range: [5, 16.25]
-  data_variable:  ['sp', 't2m', 'tcc', 'tciw', 'tclw', 'tcwv', 'tprate', 'u10', 'v10']
+  # latitude_range: [35.0, 71.0]
+  # longitude_range: [-25.0, 40.0]
+
+  data_variable:  ['blh', 'chnk', 'd2m', 'hcc', 'lcc', 'mcc', 'msl', 'sd', 'skt', 'sp', 't2m', 'tcc', 'tciw', 'tclw', 'tcwv', 'tprate', 'u10', 'v10']
+
   data_target: ["t2m"]
   unit: "Temperature (C)"
 
