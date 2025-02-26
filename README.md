@@ -113,6 +113,13 @@ tensorboard --logdir .
 
 $\textcolor{orange}{\textsf{config file}}$: The training use a yaml configuration file. Feel free to change parameters.
 
+## Tesorboard
+
+In the project root direectory:
+
+```Bash
+tensorboard --logdir .
+```
 
 ## Test Model with Gradio
 
