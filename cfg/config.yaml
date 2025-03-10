@@ -24,10 +24,10 @@ dataset:
   time_range: "2024-10"
   start_date: "2020-01-01"
   end_date: "2020-01-10"
-  latitude_range: [47, 58.22]
-  longitude_range: [5, 16.25]
-  # latitude_range: [35.0, 71.0]
-  # longitude_range: [-25.0, 40.0]
+  # latitude_range: [47, 58.22]
+  # longitude_range: [5, 16.25]
+  latitude_range: [35.0, 71.0]
+  longitude_range: [-25.0, 40.0]
 
   data_variable:  ['t2m']
   data_target: ['t2m']
